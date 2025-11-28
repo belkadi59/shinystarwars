@@ -23,28 +23,49 @@ ui <- fluidPage(
                         label = "Height of characters",
                         min = 0,
                         max = 250,
-                        value = 30)
+                        value = 30),
+            selectInput(
+              inputId = "sexe",
+              label = "Choisissez le genre",
+              choices = c("masculine","feminine")
+            )
         ),
-
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput(outputId = "StarWarsPlot")
+          textOutput(outputId = "nbperso"),
+          plotOutput(outputId = "StarWarsPlot"),
+          DT::DTOutput(outputId = "tableau")
         )
+        
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
+    output$nbperso <- renderText({
+      n <- starwars |> 
+        filter(height > input$taille & gender == input$sexe) |>
+        nrow()
+      paste("Nombre de personnages sélectionnés :", n)
+    })
+    
     output$StarWarsPlot <- renderPlot({
       starwars |> 
-        filter(height > input$taille) |>
+        filter(height > input$taille & gender == input$sexe) |>
         ggplot(aes(x = height)) +
         geom_histogram(
           binwidth = 10, 
           fill = "darkgray", 
           color = "white"
+        )+
+        labs(
+          title = paste("Graphique filtré par ",input$sexe)
         )
+    })
+    
+    output$tableau <- DT::renderDT({
+      starwars |> 
+        filter(height > input$taille & gender == input$sexe)
     })
 }
 
